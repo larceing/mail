@@ -9,6 +9,12 @@ const CLAVE = () => process.env.RESEND_API_KEY || '';
 const REMITENTE = () => process.env.MAIL_REMITENTE || 'Henry Arce <soporte@luiscontacto03.com>';
 const MAX_DESTINATARIOS = 50;
 const POR_MINUTO = 30;
+// Adjuntos: Resend admite hasta 40 MB por correo; aquí bastante menos, que el
+// JSON viaja entero en memoria.
+const MAX_ADJUNTOS = 5;
+const MAX_BYTES_ADJUNTOS = 10 * 1024 * 1024;
+// Lo que los programas de correo suelen bloquear o marcar como peligroso.
+const EXTENSION_PROHIBIDA = /\.(exe|bat|cmd|com|scr|pif|js|jse|vbs|vbe|msi|ps1|jar|lnk|hta|cpl|dll|reg|sh)$/i;
 
 const EMAIL = /^[^\s@,;<>"]+@[^\s@,;<>"]+\.[^\s@,;<>"]+$/;
 
@@ -82,6 +88,26 @@ function destinatarios(para) {
   return lista;
 }
 
+// [{ nombre, contenido (base64) }] -> la lista para Resend y los nombres para el registro.
+function adjuntosDe(lista) {
+  if (lista == null) return [];
+  if (!Array.isArray(lista)) throw error('adjuntos: tiene que ser una lista.');
+  if (lista.length > MAX_ADJUNTOS) throw error('adjuntos: como mucho ' + MAX_ADJUNTOS + '.');
+  let total = 0;
+  return lista.map((a, i) => {
+    const nombre = String((a && a.nombre) || '').trim();
+    if (!nombre || nombre.length > 150 || /[\\/\r\n\0<>:"|?*]/.test(nombre) || !/\.[A-Za-z0-9]{1,8}$/.test(nombre)) {
+      throw error('adjuntos[' + i + ']: el nombre tiene que ser un fichero con extensión (factura.pdf), sin barras.');
+    }
+    if (EXTENSION_PROHIBIDA.test(nombre)) throw error('adjuntos[' + i + ']: ese tipo de fichero no se envía.');
+    const contenido = String((a && a.contenido) || '').replace(/\s+/g, '');
+    if (!contenido || !/^[A-Za-z0-9+/]+={0,2}$/.test(contenido)) throw error('adjuntos[' + i + ']: el contenido tiene que ir en base64.');
+    total += Buffer.byteLength(contenido, 'base64');
+    if (total > MAX_BYTES_ADJUNTOS) throw error('adjuntos: entre todos, como mucho ' + (MAX_BYTES_ADJUNTOS / 1024 / 1024) + ' MB.');
+    return { filename: nombre, content: contenido };
+  });
+}
+
 async function llamarResend(cuerpo) {
   try {
     const r = await fetch(process.env.RESEND_URL || 'https://api.resend.com/emails', {
@@ -104,9 +130,10 @@ async function llamarResend(cuerpo) {
   }
 }
 
-// datos: { para, asunto, bloques | mensaje (+ boton), pie?, responder_a? }
+// datos: { para, asunto, bloques | mensaje (+ boton), pie?, responder_a?, adjuntos? }
 async function enviar(app, remitente, datos) {
   const para = destinatarios(datos.para);
+  const adjuntos = adjuntosDe(datos.adjuntos);
   const correo = plantilla.componer(datos);
   let responder = '';
   if (datos.responder_a) {
@@ -117,15 +144,18 @@ async function enviar(app, remitente, datos) {
   const resultado = CLAVE()
     ? await llamarResend({
       from: remitente || REMITENTE(), to: para, subject: correo.asunto, html: correo.html, text: correo.texto,
-      ...(responder ? { reply_to: responder } : {})
+      ...(responder ? { reply_to: responder } : {}),
+      ...(adjuntos.length ? { attachments: adjuntos } : {})
     })
     : { ok: false, motivo: 'Falta RESEND_API_KEY: no se envía nada.' };
 
-  const info = bd.prepare('INSERT INTO envio (app, para, asunto, estado, motivo, resend_id, html, creado) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-    .run(app, para.join(', '), correo.asunto, resultado.ok ? 'enviado' : 'fallido', resultado.motivo || '', resultado.id || '', correo.html, ahora());
+  // Del adjunto se anota solo el nombre: el fichero no se guarda.
+  const info = bd.prepare('INSERT INTO envio (app, para, asunto, estado, motivo, resend_id, html, adjuntos, creado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .run(app, para.join(', '), correo.asunto, resultado.ok ? 'enviado' : 'fallido', resultado.motivo || '', resultado.id || '', correo.html,
+      adjuntos.map(a => a.filename).join(', '), ahora());
 
   if (!resultado.ok) throw Object.assign(error(resultado.motivo, 502), { id: Number(info.lastInsertRowid) });
-  return { id: Number(info.lastInsertRowid), enviado: true };
+  return { id: Number(info.lastInsertRowid), enviado: true, adjuntos: adjuntos.length };
 }
 
 function envios(filtro) {

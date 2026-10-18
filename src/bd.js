@@ -39,6 +39,10 @@ bd.exec(`
   );
 `);
 
+// Columnas añadidas después: se crean si faltan (la versión anterior las ignora).
+const columnas = (tabla) => bd.prepare('PRAGMA table_info(' + tabla + ')').all().map(c => c.name);
+if (!columnas('envio').includes('adjuntos')) bd.exec("ALTER TABLE envio ADD COLUMN adjuntos TEXT NOT NULL DEFAULT ''");
+
 const ahora = () => new Date().toISOString();
 
 module.exports = { bd, ahora, DATOS };

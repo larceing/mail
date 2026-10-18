@@ -35,8 +35,12 @@ curl -X POST "$MAIL_URL/api/enviar" \
   }'
 ```
 
-Responde `{ "id": 12, "enviado": true }`. Errores: `400` (datos mal, con el motivo), `401`
+Responde `{ "id": 12, "enviado": true, "adjuntos": 0 }`. Errores: `400` (datos mal, con el motivo), `401`
 (llave), `429` (más de 30 por minuto), `502` (Resend no lo ha aceptado; queda anotado).
+
+**Adjuntos** (opcional): `"adjuntos": [{ "nombre": "F-2026-0001.pdf", "contenido": "<base64>" }]`.
+Como mucho 5 y 10 MB entre todos; no se admiten ejecutables (`.exe`, `.bat`, `.js`…). Del adjunto
+solo queda anotado el nombre: el fichero no se guarda en Mail.
 
 Para lo sencillo vale `"mensaje": "texto"` (y `"boton": { "texto", "url" }`) en vez de
 `bloques`. `POST /api/vista` con lo mismo devuelve `{ asunto, html, texto }` sin enviar.
