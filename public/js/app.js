@@ -73,7 +73,7 @@ async function cargarEnvios() {
 async function verEnvio(id) {
   const e = await api('GET', '/envios/' + id);
   $('verAsunto').textContent = e.asunto;
-  $('verDatos').textContent = fecha(e.creado) + ' · ' + e.app + ' → ' + e.para + (e.motivo ? ' · ' + e.motivo : '');
+  $('verDatos').textContent = fecha(e.creado) + ' · ' + e.app + ' → ' + e.para + (e.adjuntos ? ' · adjuntos: ' + e.adjuntos : '') + (e.motivo ? ' · ' + e.motivo : '');
   $('verHtml').srcdoc = e.html;
   $('verEnvio').classList.remove('hidden');
   $('verEnvio').scrollIntoView({ behavior: 'smooth' });

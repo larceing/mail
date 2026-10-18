@@ -70,6 +70,29 @@ const resend = http.createServer((req, res) => {
   assert.strictEqual(enviado.datos.reply_to, 'henry@ejemplo.com');
   assert.ok(enviado.datos.html.includes('d.gif') && enviado.datos.text.includes('youtu.be'));
 
+  // Con un PDF adjunto: llega a Resend y en el registro queda solo el nombre.
+  const pdf = Buffer.from('%PDF-1.4 prueba').toString('base64');
+  const conAdjunto = await pedir('POST', '/api/enviar', {
+    para: 'cliente@ejemplo.org', asunto: 'Factura', mensaje: 'Adjunta.', adjuntos: [{ nombre: 'F-2026-0001.pdf', contenido: pdf }]
+  }, conLlave);
+  assert.strictEqual(conAdjunto.status, 200, JSON.stringify(conAdjunto.j));
+  assert.deepStrictEqual(recibidos.pop().datos.attachments, [{ filename: 'F-2026-0001.pdf', content: pdf }]);
+  assert.strictEqual((await pedir('GET', '/api/admin/envios/' + conAdjunto.j.id)).j.adjuntos, 'F-2026-0001.pdf');
+
+  // Adjuntos malos: sin nombre de fichero, con ruta, ejecutables o sin base64.
+  for (const malo of [
+    [{ nombre: 'factura', contenido: pdf }], [{ nombre: '../f.pdf', contenido: pdf }],
+    [{ nombre: 'virus.exe', contenido: pdf }], [{ nombre: 'f.pdf', contenido: 'no es base64!' }], { nombre: 'f.pdf' }
+  ]) {
+    assert.strictEqual((await pedir('POST', '/api/enviar', { para: 'a@b.com', asunto: 'x', mensaje: 'y', adjuntos: malo }, conLlave)).status, 400, JSON.stringify(malo));
+  }
+  // Más de 10 MB entre todos: no.
+  const grande = Buffer.alloc(3.5 * 1024 * 1024).toString('base64');
+  assert.strictEqual((await pedir('POST', '/api/enviar', {
+    para: 'a@b.com', asunto: 'x', mensaje: 'y', adjuntos: ['a.pdf', 'b.pdf', 'c.pdf'].map(nombre => ({ nombre, contenido: grande }))
+  }, conLlave)).status, 400);
+  assert.strictEqual(recibidos.length, 0);
+
   // Datos malos: 400 y nada a Resend.
   assert.strictEqual((await pedir('POST', '/api/enviar', { para: 'no-es-correo', asunto: 'x', mensaje: 'y' }, conLlave)).status, 400);
   assert.strictEqual((await pedir('POST', '/api/enviar', { para: 'a@b.com', asunto: 'x', bloques: [{ tipo: 'boton', texto: 'a', url: 'javascript:x' }] }, conLlave)).status, 400);
@@ -88,9 +111,9 @@ const resend = http.createServer((req, res) => {
 
   // Registro.
   const lista = (await pedir('GET', '/api/admin/envios')).j;
-  assert.deepStrictEqual(lista.map(e => e.estado), ['fallido', 'enviado']);
+  assert.deepStrictEqual(lista.map(e => e.estado), ['fallido', 'enviado', 'enviado']);
   assert.strictEqual((await pedir('GET', '/api/admin/envios?app=otra')).j.length, 0);
-  assert.ok((await pedir('GET', '/api/admin/envios/' + lista[1].id)).j.html.includes('d.gif'));
+  assert.ok((await pedir('GET', '/api/admin/envios/' + lista[2].id)).j.html.includes('d.gif'));
 
   // Revocar.
   const llaves = (await pedir('GET', '/api/admin/llaves')).j;

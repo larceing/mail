@@ -38,6 +38,8 @@ app.get('/r/:nombre', (req, res) => {
 
 // Las imágenes viajan en base64 dentro del JSON.
 app.use('/api/admin/recursos', express.json({ limit: '12mb' }));
+// Los adjuntos también: 10 MB de ficheros son unos 13,5 MB en base64.
+app.use('/api/enviar', express.json({ limit: '15mb' }));
 app.use(express.json({ limit: '300kb' }));
 app.use('/api', (req, res, next) => {
   if (req.method !== 'GET' && req.method !== 'DELETE' && !req.is('application/json')) {
