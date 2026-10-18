@@ -1,0 +1,17 @@
+{
+  "name": "mail",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Envío de correo con la marca para las apps del servidor DEV/PRO: bloques, Resend, registro y llaves por app.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "test": "node --disable-warning=ExperimentalWarning tests/plantilla.js && node --disable-warning=ExperimentalWarning tests/api.js && node --disable-warning=ExperimentalWarning tests/acceso.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

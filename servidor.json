@@ -1,0 +1,13 @@
+{
+  "nombre": "Mail",
+  "ruta": "mail",
+  "grupo": "Mail",
+  "puerto": 3000,
+  "prefijo": "quitar",
+  "version": "version/",
+  "despliegue": {
+    "tipo": "servidor",
+    "imagen": "ghcr.io/larceing/mail",
+    "memoria_mb": 128
+  }
+}
