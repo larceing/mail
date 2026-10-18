@@ -8,6 +8,7 @@
 //   { tipo: 'imagen', url, alt, enlace? }
 //   { tipo: 'video', gif, url, texto? }  GIF animado que abre el vídeo completo
 //   { tipo: 'capacidades', items: [{ icono?, titulo, texto }] }  tarjetas, dos por fila
+//   { tipo: 'tabla', titulo?, filas: [[etiqueta, valor], ...] }  datos en dos columnas
 //   { tipo: 'nota', texto }             letra pequeña
 //   { tipo: 'separador' }
 
@@ -139,6 +140,19 @@ function bloque(b) {
       return {
         html: '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 12px;">' + filas + '</table>',
         texto: items.map(it => '- ' + it.titulo + (it.texto ? ': ' + plano(it.texto) : '')).join('\n')
+      };
+    }
+    case 'tabla': {
+      const filas = Array.isArray(b.filas) ? b.filas : [];
+      if (!filas.length || filas.length > 40) throw error('tabla: entre 1 y 40 filas.');
+      if (!filas.every(f => Array.isArray(f) && f.length === 2)) throw error('tabla: cada fila es [etiqueta, valor].');
+      const titulo = b.titulo ? String(b.titulo).slice(0, 120) : '';
+      const celdas = filas.map(([k, v]) => '<tr><td style="padding:7px 0;border-bottom:1px solid ' + C.linea + ';color:' + C.suave + ';">' + esc(k) + '</td>' +
+        '<td style="padding:7px 0 7px 12px;border-bottom:1px solid ' + C.linea + ';text-align:right;font-weight:bold;">' + esc(v) + '</td></tr>').join('');
+      return {
+        html: (titulo ? '<div style="font-size:13px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:' + C.boton + ';margin:6px 0 4px;">' + esc(titulo) + '</div>' : '') +
+          '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:15px;border-top:1px solid ' + C.linea + ';margin:0 0 18px;">' + celdas + '</table>',
+        texto: (titulo ? titulo.toUpperCase() + '\n' : '') + filas.map(([k, v]) => k + ': ' + v).join('\n')
       };
     }
     case 'nota': {

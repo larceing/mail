@@ -53,6 +53,7 @@ En **Redactar**, «Copiar como JSON» da el cuerpo exacto de un correo hecho a m
 | `imagen` | `url`, `alt`, `enlace`? | |
 | `video` | `gif`, `url`, `texto`? | GIF animado que abre el vídeo. Gmail y Outlook no reproducen vídeo; un GIF sí (Outlook de Windows solo enseña el primer fotograma). Mejor de 3-4 MB como mucho |
 | `capacidades` | `items: [{ icono?, titulo, texto }]` | Tarjetas, dos por fila; el icono es un emoji o una imagen https |
+| `tabla` | `titulo`?, `filas: [[etiqueta, valor], …]` | Datos en dos columnas (resúmenes, importes) |
 | `nota` | `texto` | Letra pequeña |
 | `separador` | | |
 

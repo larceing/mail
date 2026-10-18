@@ -40,4 +40,10 @@ mal({ asunto: 'x', bloques: [{ tipo: 'capacidades', items: ['a'] }] }, 'capacida
 const s = componer({ asunto: 'Aviso', mensaje: 'Hola', boton: { texto: 'Abrir', url: 'https://a.com' } });
 assert.ok(s.html.includes('Abrir') && s.texto.startsWith('Hola'));
 
+// Tabla de datos.
+const tb = componer({ asunto: 'R', bloques: [{ tipo: 'tabla', titulo: 'Cobros', filas: [['Pendiente', '1.200,00 €'], ['Facturas <x>', 3]] }] });
+assert.ok(tb.html.includes('1.200,00 €') && tb.html.includes('Facturas &lt;x&gt;'));
+assert.ok(tb.texto.includes('COBROS\nPendiente: 1.200,00 €'));
+mal({ asunto: 'x', bloques: [{ tipo: 'tabla', filas: [['solo uno']] }] }, 'tabla');
+
 console.log('plantilla: bien');
