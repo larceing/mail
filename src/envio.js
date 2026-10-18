@@ -155,7 +155,7 @@ async function enviar(app, remitente, datos) {
       adjuntos.map(a => a.filename).join(', '), ahora());
 
   if (!resultado.ok) throw Object.assign(error(resultado.motivo, 502), { id: Number(info.lastInsertRowid) });
-  return { id: Number(info.lastInsertRowid), enviado: true };
+  return { id: Number(info.lastInsertRowid), enviado: true, adjuntos: adjuntos.length };
 }
 
 function envios(filtro) {

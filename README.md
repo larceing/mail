@@ -35,7 +35,7 @@ curl -X POST "$MAIL_URL/api/enviar" \
   }'
 ```
 
-Responde `{ "id": 12, "enviado": true }`. Errores: `400` (datos mal, con el motivo), `401`
+Responde `{ "id": 12, "enviado": true, "adjuntos": 0 }`. Errores: `400` (datos mal, con el motivo), `401`
 (llave), `429` (más de 30 por minuto), `502` (Resend no lo ha aceptado; queda anotado).
 
 **Adjuntos** (opcional): `"adjuntos": [{ "nombre": "F-2026-0001.pdf", "contenido": "<base64>" }]`.
