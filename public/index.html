@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mail</title>
+  <link rel="stylesheet" href="css/mail.css">
+</head>
+<body>
+  <header class="barra">
+    <div class="marca"><img src="marca/monograma.png" alt=""><strong>Mail</strong></div>
+    <nav id="pestanas">
+      <button data-p="enviados" class="activa">Enviados</button>
+      <button data-p="redactar">Redactar</button>
+      <button data-p="imagenes">Imágenes</button>
+      <button data-p="llaves">Llaves</button>
+    </nav>
+    <span class="hueco"></span>
+    <span id="yo" class="suave"></span>
+    <button id="salir" class="enlace">Salir</button>
+  </header>
+
+  <main>
+    <p id="aviso" class="aviso-barra hidden"></p>
+
+    <section id="p-enviados">
+      <div class="fila">
+        <input id="buscar" placeholder="Buscar por destinatario o asunto">
+        <select id="filtroApp"><option value="">Todas las apps</option></select>
+      </div>
+      <table class="tabla">
+        <thead><tr><th>Cuándo</th><th>App</th><th>Para</th><th>Asunto</th><th>Estado</th></tr></thead>
+        <tbody id="listaEnvios"></tbody>
+      </table>
+      <div id="verEnvio" class="panel hidden">
+        <div class="fila"><strong id="verAsunto"></strong><span class="hueco"></span><button class="enlace" id="cerrarEnvio">Cerrar</button></div>
+        <p id="verDatos" class="suave"></p>
+        <iframe id="verHtml" sandbox title="Correo enviado"></iframe>
+      </div>
+    </section>
+
+    <section id="p-redactar" class="hidden">
+      <div class="dos">
+        <div class="panel">
+          <label>Para (separadas por comas)<input id="rPara"></label>
+          <label>Asunto<input id="rAsunto"></label>
+          <div id="bloques"></div>
+          <div class="anadir">
+            Añadir:
+            <button data-b="titulo">Título</button>
+            <button data-b="texto">Texto</button>
+            <button data-b="boton">Botón</button>
+            <button data-b="imagen">Imagen</button>
+            <button data-b="video">Vídeo (GIF)</button>
+            <button data-b="capacidades">Capacidades</button>
+            <button data-b="nota">Nota</button>
+            <button data-b="separador">Separador</button>
+          </div>
+          <label>Pie (opcional; si no, el de la marca)<input id="rPie"></label>
+          <div class="fila">
+            <button id="enviarPrueba" class="primario">Enviar</button>
+            <button id="copiarJson">Copiar como JSON</button>
+          </div>
+          <p class="suave">«Copiar como JSON» da lo que otra app tiene que mandar a <code>/api/enviar</code> para este mismo correo.</p>
+        </div>
+        <div class="panel">
+          <strong>Así lo verá quien lo reciba</strong>
+          <p id="vistaError" class="error hidden"></p>
+          <iframe id="vista" sandbox title="Vista previa"></iframe>
+        </div>
+      </div>
+    </section>
+
+    <section id="p-imagenes" class="hidden">
+      <div class="panel">
+        <p>Imágenes y GIF para los correos. Se sirven en una dirección pública para que los programas de correo las carguen. Para un vídeo, un GIF de 3-4 MB como mucho.</p>
+        <input type="file" id="subir" accept="image/png,image/jpeg,image/gif,image/webp">
+      </div>
+      <div id="listaImagenes" class="galeria"></div>
+    </section>
+
+    <section id="p-llaves" class="hidden">
+      <div class="panel">
+        <p>Cada app que envía correo tiene su llave. Se ve una sola vez: guárdala en el <code>app.env</code> de esa app como <code>MAIL_LLAVE</code>.</p>
+        <div class="fila">
+          <input id="lApp" placeholder="app (soporte, tareas…)">
+          <input id="lRemitente" placeholder="Remitente (opcional): Nombre <algo@dominio>">
+          <button id="crearLlave" class="primario">Crear llave</button>
+        </div>
+        <p id="llaveNueva" class="llave hidden"></p>
+      </div>
+      <table class="tabla">
+        <thead><tr><th>App</th><th>Remitente</th><th>Creada</th><th>Último uso</th><th></th></tr></thead>
+        <tbody id="listaLlaves"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
