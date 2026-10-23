@@ -21,7 +21,11 @@ app.use((req, res, next) => {
     if (url === undefined) { url = status; status = 302; }
     return redirigir(status, conPrefijo(req.prefijo, url));
   };
-  res.set({ 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin' });
+  // Sin enmarcar desde otro sitio (clickjacking); la vista previa propia sí.
+  res.set({
+    'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin',
+    'X-Frame-Options': 'SAMEORIGIN', 'Content-Security-Policy': "frame-ancestors 'self'"
+  });
   next();
 });
 
