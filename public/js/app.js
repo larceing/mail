@@ -301,6 +301,7 @@ $('salir').addEventListener('click', async () => {
     const yo = await api('GET', '/yo');
     base = yo.base;
     $('yo').textContent = yo.usuario;
+    if (location.hostname.startsWith('dev.')) $('chipDev').hidden = false;
     $('lRemitente').placeholder = 'Remitente (opcional): Nombre <algo@' + yo.dominio + '>';
     if (!yo.resendActivo) aviso('Falta RESEND_API_KEY en el app.env: se ve todo pero no se envía nada.');
     pintarBloques();
