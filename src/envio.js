@@ -18,6 +18,12 @@ const EXTENSION_PROHIBIDA = /\.(exe|bat|cmd|com|scr|pif|js|jse|vbs|vbe|msi|ps1|j
 
 const EMAIL = /^[^\s@,;<>"]+@[^\s@,;<>"]+\.[^\s@,;<>"]+$/;
 
+// Apps que mandan el correo ya hecho (html + texto) en vez de bloques: su llave
+// tiene que ser de una de estas apps. Hoy, la captación de n8n, que lleva su
+// propio formato. Las demás siguen con bloques (todo escapado).
+const HTML_PROPIO = () => String(process.env.MAIL_HTML_PROPIO ?? 'captacion').split(',').map(a => a.trim()).filter(Boolean);
+const MAX_HTML = 200 * 1024;
+
 function error(mensaje, status) {
   return Object.assign(new Error(mensaje), { status: status || 400 });
 }
@@ -131,10 +137,22 @@ async function llamarResend(cuerpo) {
 }
 
 // datos: { para, asunto, bloques | mensaje (+ boton), pie?, responder_a?, adjuntos? }
+// Correo ya hecho por la app: solo para las apps de MAIL_HTML_PROPIO.
+function correoPropio(app, datos) {
+  if (!HTML_PROPIO().includes(app)) throw error('html: esta llave no puede mandar el correo ya hecho; usa bloques.', 403);
+  const asunto = String(datos.asunto || '').replace(/[\r\n]+/g, ' ').trim();
+  if (!asunto || asunto.length > 250) throw error('asunto: falta o es demasiado largo.');
+  const html = String(datos.html || '');
+  const texto = String(datos.texto || '').trim();
+  if (!texto) throw error('texto: con html hay que mandar también la versión en texto.');
+  if (Buffer.byteLength(html) > MAX_HTML || Buffer.byteLength(texto) > MAX_HTML) throw error('html: demasiado grande.');
+  return { asunto, html, texto };
+}
+
 async function enviar(app, remitente, datos) {
   const para = destinatarios(datos.para);
   const adjuntos = adjuntosDe(datos.adjuntos);
-  const correo = plantilla.componer(datos);
+  const correo = datos.html != null ? correoPropio(app, datos) : plantilla.componer(datos);
   let responder = '';
   if (datos.responder_a) {
     responder = String(datos.responder_a).trim();

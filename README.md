@@ -1,4 +1,6 @@
-# Mail
+# Hermes (Mail)
+
+**Hermes** es el nombre de Mail desde el 10/11/2026 (Luis). Por dentro sigue igual: ruta `/mail/`, grupo `Mail` en Keycloak, repo `larceing/mail`.
 
 El correo de todas las apps del servidor DEV/PRO, con la marca: las apps mandan **qué** decir
 (en bloques) y Mail lo envía por Resend con la cabecera, los colores y el pie de siempre, y lo
@@ -47,6 +49,18 @@ Para lo sencillo vale `"mensaje": "texto"` (y `"boton": { "texto", "url" }`) en 
 
 En **Redactar**, «Copiar como JSON» da el cuerpo exacto de un correo hecho a mano.
 
+### Correo ya hecho (solo algunas apps)
+
+Hay apps que traen su propio formato, como la captación de n8n. Su llave puede mandar
+`html` y `texto` en vez de `bloques`; Hermes lo envía tal cual y lo anota igual que el resto:
+
+```
+{ "para": ["x@empresa.com"], "asunto": "…", "html": "<!doctype html>…", "texto": "…", "responder_a": "henry@…" }
+```
+
+Solo las llaves de las apps de `MAIL_HTML_PROPIO` (por defecto `captacion`); las demás reciben `403`.
+Hacen falta los dos (`html` y `texto`), y cada uno como mucho 200 KB.
+
 ### Bloques
 
 | `tipo` | Campos | Notas |
@@ -73,6 +87,7 @@ El servidor pone Keycloak y la dirección pública. A mano, en el `app.env` de M
 |---|---|
 | `RESEND_API_KEY` | La clave de Resend. Sin ella, todo funciona pero no se envía nada |
 | `MAIL_REMITENTE` | Remitente por defecto, p. ej. `Henry Arce <soporte@luiscontacto03.com>`. Su dominio es el verificado en Resend: las llaves solo pueden usar remitentes de ese dominio |
+| `MAIL_HTML_PROPIO` | Apps (separadas por comas) que pueden mandar el correo ya hecho. Por defecto `captacion` |
 | `MARCA_NOMBRE`, `MARCA_LEMA`, `MARCA_PIE`, `MARCA_LOGO_URL` | Opcionales: la marca por defecto es Henry Arce · Business Applications & Data |
 
 Los datos (registro, llaves, imágenes) están en `/datos`, el volumen que da el servidor.
