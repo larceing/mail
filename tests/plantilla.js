@@ -22,8 +22,10 @@ assert.ok(c.html.includes('<strong>dos</strong>'), 'negrita');
 assert.ok(c.html.includes('<ul'), 'lista');
 assert.ok(c.html.includes('a=1&amp;b=2'), 'las direcciones se escapan');
 assert.ok(c.html.includes('demo.gif') && c.html.includes('https://youtu.be/abc'), 'vídeo: GIF y enlace');
-assert.ok(c.html.includes('https://pro.ejemplo.com/mail/marca/monograma.png'), 'logo desde la dirección pública');
-assert.strictEqual((c.html.match(/<tr><td valign/g) || []).length, 2, 'tres tarjetas = dos filas');
+assert.ok(c.html.includes('>HA</div>') && c.html.includes('Arce Data Lab'), 'firma de la casa: monograma HA y Arce Data Lab');
+assert.ok(!/Business Applications/i.test(c.html), 'sin la marca antigua');
+assert.ok(c.texto.includes('Henry Arce\nArce Data Lab'), 'texto plano con la firma');
+assert.strictEqual((c.html.match(/<tr><td valign="top" width="50%"/g) || []).length, 2, 'tres tarjetas = dos filas');
 assert.ok(c.texto.includes('Ver: https://ejemplo.com/x?a=1&b=2'), 'texto plano con el botón');
 assert.ok(c.texto.includes('- Rápido: En minutos'), 'texto plano con capacidades');
 

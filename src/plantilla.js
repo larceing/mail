@@ -12,21 +12,27 @@
 //   { tipo: 'nota', texto }             letra pequeña
 //   { tipo: 'separador' }
 
+// Formato de la casa (plantilla-correo-v2, 10/11/2026): tarjeta blanca sobre gris,
+// botón azul, firma con el monograma «HA» y la línea de baja fuera de la tarjeta.
 const C = {
-  fondo: '#F3F5F7', papel: '#FFFFFF', tinta: '#15202B', suave: '#5B6877', linea: '#DDE3EA',
-  marca: '#0E1B33', acento: '#35D6C0', boton: '#1D4F7A', tarjeta: '#F6F8FA'
+  fondo: '#F4F5F7', papel: '#FFFFFF', tinta: '#1E2329', suave: '#4B5563', gris: '#9AA1AB', linea: '#E3E6EA',
+  marca: '#0F1B2D', acento: '#1F4FD8', boton: '#1F4FD8', tarjeta: '#F6F8FA'
 };
 
 const MAX_BLOQUES = 40;
 const MAX_TEXTO = 20000;
 
 function marca() {
-  const base = String(process.env.APP_URL_PUBLICA || '').replace(/\/+$/, '');
+  const e = process.env;
   return {
-    nombre: process.env.MARCA_NOMBRE || 'HENRY ARCE',
-    lema: process.env.MARCA_LEMA || 'Business Applications & Data',
-    logo: process.env.MARCA_LOGO_URL || (base ? base + '/marca/monograma.png' : ''),
-    pie: process.env.MARCA_PIE || 'Henry Arce · Business Applications & Data'
+    nombre: e.MARCA_NOMBRE || 'Henry Arce',
+    lema: e.MARCA_LEMA || 'Arce Data Lab · Datos, automatización y web',
+    direccion: e.MARCA_DIRECCION || 'Avenida de Catral, 12, 03349 San Isidro (Alicante), España',
+    web: e.MARCA_WEB || 'arcedatalab.com',
+    correo: e.MARCA_CORREO || 'henry@arcedatalab.com',
+    iniciales: (e.MARCA_INICIALES || 'HA').slice(0, 3),
+    logo: e.MARCA_LOGO_URL || '',
+    pie: e.MARCA_PIE || ''
   };
 }
 
@@ -178,32 +184,43 @@ function bloquesDe(datos) {
   return b;
 }
 
+function firma(m) {
+  const F = 'font-family:Arial,Helvetica,sans-serif;';
+  const icono = m.logo
+    ? '<img src="' + esc(m.logo) + '" width="48" height="48" alt="" style="display:block;border:0;border-radius:10px;">'
+    : '<div style="width:48px;height:48px;border-radius:10px;background:' + C.marca + ';color:#FFFFFF;' + F + 'font-weight:bold;font-size:18px;line-height:48px;text-align:center;">' + esc(m.iniciales) + '</div>';
+  const web = String(m.web).replace(/^https?:\/\//, '').replace(/\/+$/, '');
+  return '<table role="presentation" cellpadding="0" cellspacing="0" style="border-top:1px solid ' + C.linea + ';"><tr>' +
+    '<td valign="top" style="padding:16px 14px 0 0;">' + icono + '</td>' +
+    '<td valign="top" style="padding-top:16px;' + F + 'font-size:13px;line-height:1.55;color:' + C.tinta + ';">' +
+    '<div style="font-size:15px;font-weight:bold;">' + esc(m.nombre) + '</div>' +
+    '<div style="color:' + C.acento + ';font-weight:bold;letter-spacing:.04em;font-size:11px;text-transform:uppercase;">' + esc(m.lema) + '</div>' +
+    (m.direccion ? '<div style="color:' + C.suave + ';">' + esc(m.direccion) + '</div>' : '') +
+    '<div style="padding-top:4px;"><a href="https://' + esc(web) + '/" style="color:' + C.tinta + ';text-decoration:none;">' + esc(web) + '</a>' +
+    (m.correo ? ' · <a href="mailto:' + esc(m.correo) + '" style="color:' + C.tinta + ';text-decoration:none;">' + esc(m.correo) + '</a>' : '') + '</div>' +
+    '</td></tr></table>';
+}
+
 function componer(datos) {
   const asunto = texto(datos.asunto, 'asunto', 250).replace(/[\r\n]+/g, ' ');
   const partes = bloquesDe(datos).map(bloque);
   const m = marca();
-  const pie = datos.pie ? enLinea(String(datos.pie).slice(0, 500)) : esc(m.pie);
-
-  const cabecera = '<tr><td style="background:' + C.marca + ';padding:16px 22px;">' +
-    '<table role="presentation" cellpadding="0" cellspacing="0"><tr>' +
-    (m.logo ? '<td style="padding-right:14px;vertical-align:middle;"><img src="' + esc(m.logo) + '" width="46" height="46" alt="" style="display:block;border:0;border-radius:11px;"></td>' : '') +
-    '<td style="vertical-align:middle;">' +
-    '<div style="color:#FFFFFF;font-size:17px;font-weight:bold;letter-spacing:1px;">' + esc(m.nombre) + '</div>' +
-    '<div style="color:' + C.acento + ';font-size:10px;font-weight:bold;letter-spacing:1.5px;text-transform:uppercase;padding-top:3px;">' + esc(m.lema) + '</div>' +
-    '</td></tr></table></td></tr>' +
-    '<tr><td style="height:4px;background:' + C.acento + ';font-size:1px;line-height:1px;">&nbsp;</td></tr>';
+  const pieTexto = datos.pie ? String(datos.pie).slice(0, 500) : m.pie;
+  const F = 'font-family:Arial,Helvetica,sans-serif;';
 
   const html = '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<title>' + esc(asunto) + '</title></head>' +
-    '<body style="margin:0;background:' + C.fondo + ';font-family:Arial,Helvetica,sans-serif;color:' + C.tinta + ';">' +
-    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:' + C.fondo + ';padding:24px 12px;"><tr><td align="center">' +
-    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:' + C.papel + ';border-radius:14px;overflow:hidden;">' +
-    cabecera +
-    '<tr><td style="padding:26px 24px 8px;">' + partes.map(p => p.html).join('') + '</td></tr>' +
-    '<tr><td style="padding:14px 24px 22px;border-top:1px solid ' + C.linea + ';font-size:12px;color:' + C.suave + ';">' + pie + '</td></tr>' +
-    '</table></td></tr></table></body></html>';
+    '<body style="margin:0;padding:0;background:' + C.fondo + ';' + F + 'color:' + C.tinta + ';">' +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:' + C.fondo + ';"><tr><td align="center" style="padding:24px 12px;">' +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:' + C.papel + ';border-radius:10px;border:1px solid ' + C.linea + ';">' +
+    '<tr><td style="padding:28px 32px 8px 32px;' + F + 'font-size:15px;line-height:1.6;color:' + C.tinta + ';">' + partes.map(p => p.html).join('') + '</td></tr>' +
+    '<tr><td style="padding:12px 32px 28px 32px;">' + firma(m) + '</td></tr>' +
+    '</table>' +
+    (pieTexto ? '<div style="' + F + 'font-size:11px;color:' + C.gris + ';padding:14px 12px 0 12px;max-width:600px;">' + enLinea(pieTexto) + '</div>' : '') +
+    '</td></tr></table></body></html>';
 
-  const textoPlano = partes.map(p => p.texto).filter(Boolean).join('\n\n') + '\n\n--\n' + plano(datos.pie || m.pie);
+  const firmaTexto = [m.nombre, m.lema, m.direccion, [m.web, m.correo].filter(Boolean).join(' · ')].filter(Boolean).join('\n');
+  const textoPlano = partes.map(p => p.texto).filter(Boolean).join('\n\n') + '\n\n--\n' + firmaTexto + (pieTexto ? '\n\n' + plano(pieTexto) : '');
   return { asunto, html, texto: textoPlano };
 }
 
