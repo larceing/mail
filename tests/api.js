@@ -70,6 +70,21 @@ const resend = http.createServer((req, res) => {
   assert.strictEqual(enviado.datos.reply_to, 'henry@ejemplo.com');
   assert.ok(enviado.datos.html.includes('d.gif') && enviado.datos.text.includes('youtu.be'));
 
+  // Correo ya hecho (html + texto): solo con la llave de una app de MAIL_HTML_PROPIO (captacion).
+  assert.strictEqual((await pedir('POST', '/api/enviar', { para: 'a@b.com', asunto: 'x', html: '<p>x</p>', texto: 'x' }, conLlave)).status, 403);
+  const { j: { llave: llaveCap } } = await pedir('POST', '/api/admin/llaves', { app: 'captacion', remitente: 'Henry Arce <henry@ejemplo.com>' });
+  const conCap = { Authorization: 'Bearer ' + llaveCap };
+  assert.strictEqual((await pedir('POST', '/api/enviar', { para: 'a@b.com', asunto: 'x', html: '<p>x</p>' }, conCap)).status, 400);
+  const propio = await pedir('POST', '/api/enviar', { para: 'fabrica@ejemplo.org', asunto: 'Hola', html: '<p>Hola <b>tal</b></p>', texto: 'Hola tal', responder_a: 'henry@ejemplo.com' }, conCap);
+  assert.strictEqual(propio.status, 200, JSON.stringify(propio.j));
+  const p = recibidos.pop().datos;
+  assert.strictEqual(p.html, '<p>Hola <b>tal</b></p>');
+  assert.strictEqual(p.text, 'Hola tal');
+  assert.strictEqual(p.from, 'Henry Arce <henry@ejemplo.com>');
+  const regCap = (await pedir('GET', '/api/admin/envios/' + propio.j.id)).j;
+  assert.strictEqual(regCap.app, 'captacion');
+  assert.strictEqual(regCap.html, '<p>Hola <b>tal</b></p>');
+
   // Con un PDF adjunto: llega a Resend y en el registro queda solo el nombre.
   const pdf = Buffer.from('%PDF-1.4 prueba').toString('base64');
   const conAdjunto = await pedir('POST', '/api/enviar', {
@@ -111,13 +126,13 @@ const resend = http.createServer((req, res) => {
 
   // Registro.
   const lista = (await pedir('GET', '/api/admin/envios')).j;
-  assert.deepStrictEqual(lista.map(e => e.estado), ['fallido', 'enviado', 'enviado']);
+  assert.deepStrictEqual(lista.map(e => e.estado), ['fallido', 'enviado', 'enviado', 'enviado']);
   assert.strictEqual((await pedir('GET', '/api/admin/envios?app=otra')).j.length, 0);
-  assert.ok((await pedir('GET', '/api/admin/envios/' + lista[2].id)).j.html.includes('d.gif'));
+  assert.ok((await pedir('GET', '/api/admin/envios/' + lista[3].id)).j.html.includes('d.gif'));
 
   // Revocar.
   const llaves = (await pedir('GET', '/api/admin/llaves')).j;
-  await pedir('DELETE', '/api/admin/llaves/' + llaves[0].id);
+  await pedir('DELETE', '/api/admin/llaves/' + llaves.find(l => l.app === 'soporte').id);
   assert.strictEqual((await pedir('POST', '/api/enviar', { para: 'a@b.com', asunto: 'x', mensaje: 'y' }, conLlave)).status, 401);
 
   // Límite por minuto.
