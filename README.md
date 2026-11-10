@@ -88,7 +88,7 @@ El servidor pone Keycloak y la dirección pública. A mano, en el `app.env` de M
 | `RESEND_API_KEY` | La clave de Resend. Sin ella, todo funciona pero no se envía nada |
 | `MAIL_REMITENTE` | Remitente por defecto, p. ej. `Henry Arce <soporte@luiscontacto03.com>`. Su dominio es el verificado en Resend: las llaves solo pueden usar remitentes de ese dominio |
 | `MAIL_HTML_PROPIO` | Apps (separadas por comas) que pueden mandar el correo ya hecho. Por defecto `captacion` |
-| `MARCA_NOMBRE`, `MARCA_LEMA`, `MARCA_PIE`, `MARCA_LOGO_URL` | Opcionales: la marca por defecto es Henry Arce · Business Applications & Data |
+| `MARCA_NOMBRE`, `MARCA_LEMA`, `MARCA_DIRECCION`, `MARCA_WEB`, `MARCA_CORREO`, `MARCA_INICIALES`, `MARCA_LOGO_URL`, `MARCA_PIE` | Opcionales: la firma de los correos. Por defecto, el formato de la casa (10/11/2026): Henry Arce · Arce Data Lab · Datos, automatización y web, la dirección de San Isidro (Alicante), arcedatalab.com y henry@arcedatalab.com, con el monograma «HA» |
 
 Los datos (registro, llaves, imágenes) están en `/datos`, el volumen que da el servidor.
 
